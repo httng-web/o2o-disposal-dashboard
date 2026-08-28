@@ -230,6 +230,7 @@ if (localStorage.getItem('disposal_auth') === '1') {
 </script>
 
 
+
 <div class="topbar">
   <div>
     <h1>O2O Disposal Review</h1>
@@ -425,17 +426,19 @@ function sortShops(shops) {
 }
 // net daily cap across a scope's shops
 function capOf(shops) { let t = 0; shops.forEach(s => { if (s.proj) t += s.proj.dailyBudget; }); return t; }
+function pmdOf(shops) { let t = 0; shops.forEach(s => { if (s.proj) t += s.proj.projMonthDisp; }); return t; }
 
 // ── overall drill-down ──
 function dmSummaryTable() {
   const allShops = DATA.districts.flatMap(d => d.ams.flatMap(a => a.shops));
   let h = '<div class="card"><div class="card-h"><h2>By Shop</h2></div><div class="tbl-wrap"><table>'
-    + '<tr><th>DM / AM / Shop</th><th class="num">Shops</th><th class="num">GMV</th>' + PROJ_HEADS
+    + '<tr><th>DM / AM / Shop</th><th class="num">Shops</th>' + PROJ_HEADS
     + '<th class="num">Rate</th><th>Status</th><th>Action</th><th></th></tr>';
   h += '<tr class="gt"><td>All Districts (Total)</td><td class="num">' + DATA.meta.shopCount + '</td><td class="num">' + fmt$(DATA.grand.gmv) + '</td>'
     + '<td class="num' + (DATA.grand.total > DATA.grand.budget ? ' v-red" style="font-weight:700' : '') + '">' + fmt$(DATA.grand.total) + '</td><td class="num">' + fmt$(DATA.grand.budget) + '</td>'
     + '<td class="num ' + (DATA.grand.total > DATA.grand.budget ? 'v-red' : 'v-green') + '">' + fmt$(DATA.grand.budget - DATA.grand.total) + '</td>'
     + '<td class="num">' + fmt$(capOf(allShops)) + '</td>'
+    + '<td class="num">' + fmt$(pmdOf(allShops)) + '</td>'
     + '<td class="num ' + rateCls(DATA.grand.rate) + '">' + fmtP(DATA.grand.rate) + '</td>'
     + '<td>' + (DATA.grand.overCount ? '<span class="pill p-danger">' + DATA.grand.overCount + ' over</span>' : '<span class="pill p-ok">ALL OK</span>') + '</td><td></td><td></td></tr>';
   DATA.districts.forEach((d, di) => {
@@ -445,27 +448,29 @@ function dmSummaryTable() {
       + '<td class="num' + (d.total > d.budget ? ' v-red" style="font-weight:700' : '') + '">' + fmt$(d.total) + '</td><td class="num">' + fmt$(d.budget) + '</td>'
       + '<td class="num ' + (d.total > d.budget ? 'v-red' : 'v-green') + '">' + fmt$(d.budget - d.total) + '</td>'
       + '<td class="num">' + fmt$(capOf(dShops)) + '</td>'
+      + '<td class="num">' + fmt$(pmdOf(dShops)) + '</td>'
       + '<td class="num ' + rateCls(d.rate) + '">' + fmtP(d.rate) + '</td>'
       + '<td>' + (d.overCount ? '<span class="pill p-danger">' + d.overCount + ' over</span>' : '<span class="pill p-ok">OK</span>') + '</td><td></td><td></td></tr>';
-    h += '<tr class="hidden" id="' + detId + '"><td colspan="11" style="padding:0;"><table>';
+    h += '<tr class="hidden" id="' + detId + '"><td colspan="12" style="padding:0;"><table>';
     d.ams.forEach((a, ai) => {
       const amDet = detId + '-am-' + ai;
       h += '<tr class="amrow" onclick="tog(\'' + amDet + '\')"><td style="padding-left:28px;">↳ ' + a.am + '</td><td class="num">' + a.shopCount + '</td><td class="num">' + fmt$(a.gmv) + '</td>'
         + '<td class="num' + (a.total > a.budget ? ' v-red" style="font-weight:700' : '') + '">' + fmt$(a.total) + '</td><td class="num">' + fmt$(a.budget) + '</td>'
         + '<td class="num ' + (a.total > a.budget ? 'v-red' : 'v-green') + '">' + fmt$(a.budget - a.total) + '</td>'
         + '<td class="num">' + fmt$(capOf(a.shops)) + '</td>'
+        + '<td class="num">' + fmt$(pmdOf(a.shops)) + '</td>'
         + '<td class="num ' + rateCls(a.rate) + '">' + fmtP(a.rate) + '</td>'
         + '<td>' + (a.overCount ? '<span class="pill p-danger">' + a.overCount + '</span>' : '<span class="pill p-ok">OK</span>') + '</td><td></td><td></td></tr>';
-      h += '<tr class="hidden" id="' + amDet + '"><td colspan="11" style="padding:0;"><table>';
+      h += '<tr class="hidden" id="' + amDet + '"><td colspan="12" style="padding:0;"><table>';
       sortShops(a.shops).forEach(s => {
         const shDet = amDet + '-sh-' + s.code;
         const sCls = statusClass(s.status);
         h += '<tr class="shop-row ' + sCls + '"><td style="padding-left:48px;">' + s.code + ' · ' + s.name + '</td><td class="num mini">—</td>'
-          + '<td class="num">' + fmt$(s.gmv) + '</td>' + projCells(s)
+          + projCells(s)
           + '<td class="num ' + rateCls(s.rate) + '">' + fmtP(s.rate) + '</td><td>' + pill(s.status) + '</td>'
           + actionCell(s)
           + '<td><button class="exp-btn" onclick="tog(event,\'' + shDet + '\')">…</button></td></tr>';
-        h += detailRow(shDet, s, 48, 11);
+        h += detailRow(shDet, s, 48, 12);
       });
       h += '</table></td></tr>';
     });
